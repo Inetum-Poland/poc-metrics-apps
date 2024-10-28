@@ -14,19 +14,44 @@ The main goal of this PoC is to demonstrate how to use OpenTelemetry to collect 
 
 ### `GET /api/long_run`
 
+This should call the `longRun()` function.
+
 ### `GET /api/short_run`
 
+This should call the `shortRun()` function.
+
 ### `GET /api/database_run`
+
+This should call the `databaseRun()` function.
+
+### `GET /api/failed_run`
+
+This should call the `failedRun()` function.
 
 ## Main Functions
 
 ### `longRun()`
 
+This function should call the following:
+
+- Add
+- Substract
+- Multiply
+- Divide
+
 ### `shortRun()`
+
+This function should sleep for 100 milliseconds.
 
 ### `databaseRun()`
 
-## Functions
+This function should connect to the database, find all documents, and return the result.
+
+### `failedRun()`
+
+This function should sleep for 100 milliseconds and then fail.
+
+## Helper Functions
 
 ### `add(int a, int b)`
 
@@ -35,8 +60,6 @@ The main goal of this PoC is to demonstrate how to use OpenTelemetry to collect 
 ### `multiply(int a, int b)`
 
 ### `divide(int a, int b)`
-
-### `readData(string query)`
 
 ## Database Schema
 

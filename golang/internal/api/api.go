@@ -22,6 +22,7 @@ func Router() *gin.Engine {
 		api.GET("/long_run", apifunc.LongRun)
 		api.GET("/short_run", apifunc.ShortRun)
 		api.GET("/database_run", apifunc.DatabaseRun)
+		api.GET("/failed_run", apifunc.FailedRun)
 	}
 
 	r.GET("/", func(c *gin.Context) {

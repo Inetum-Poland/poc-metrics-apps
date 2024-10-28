@@ -6,6 +6,7 @@ import (
 
 	"math/rand/v2"
 
+	"go.opentelemetry.io/otel/codes"
 	otel "inetum.com/metrics-go-app/internal/otel"
 )
 
@@ -16,9 +17,15 @@ func randRange(min, max int) int {
 func performOperation(ctx context.Context, operation string, a, b int, opFunc func(int, int) int) int {
 	_, span := otel.Tracer.Start(ctx, operation)
 	defer span.End()
+	span.AddEvent(operation + " started")
 
 	time.Sleep(time.Millisecond * time.Duration(randRange(20, 800)))
-	return opFunc(a, b)
+
+	out := opFunc(a, b)
+
+	span.SetStatus(codes.Ok, "ok")
+	span.AddEvent(operation + " done")
+	return out
 }
 
 func add(ctx context.Context, a int, b int) int {

@@ -1,6 +1,7 @@
 package function
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 func LongRun(c *gin.Context) {
 	ctx, span := otel.Tracer.Start(c.Request.Context(), "LongRun")
 	defer span.End()
-	span.AddEvent("longRun started")
+	span.AddEvent("LongRun started")
 
 	_ = add(ctx, 1, 2)
 	_ = substract(ctx, 1, 2)
@@ -24,15 +25,19 @@ func LongRun(c *gin.Context) {
 	_ = divide(ctx, 1, 2)
 
 	span.SetStatus(codes.Ok, "ok")
-	span.AddEvent("longRun done")
+	span.AddEvent("LongRun done")
 	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
 func ShortRun(c *gin.Context) {
-	_, span := otel.Tracer.Start(c.Request.Context(), "LongRun")
+	_, span := otel.Tracer.Start(c.Request.Context(), "ShortRun")
 	defer span.End()
+	span.AddEvent("ShortRun started")
 
 	time.Sleep(time.Millisecond * 100)
+
+	span.SetStatus(codes.Ok, "ok")
+	span.AddEvent("ShortRun done")
 	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
@@ -48,20 +53,38 @@ func DatabaseRun(c *gin.Context) {
 		},
 	}
 
-	span.AddEvent("databaseRun started")
+	span.AddEvent("DatabaseRun started")
 
-	collection, _ := db.Connect(ctx, connectionString)
+	collection, _, _ := db.Connect(ctx, connectionString)
 
 	span.AddEvent("collection.Find")
 	span.SetAttributes(attribute.String("query", fmt.Sprintf("%+v", opts)))
 
-	data, err := db.Find(collection, opts)
+	data, err := db.ReadData(ctx, collection, opts)
 
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+		return
 	}
 
-	span.AddEvent("databaseRun done")
 	span.SetStatus(codes.Ok, "ok")
+	span.AddEvent("DatabaseRun done")
 	c.JSON(http.StatusOK, data)
+}
+
+func FailedRun(c *gin.Context) {
+	_, span := otel.Tracer.Start(c.Request.Context(), "FailedRun")
+	defer span.End()
+	span.AddEvent("FailedRun started")
+
+	time.Sleep(time.Millisecond * 100)
+
+	fmt.Println("Failed")
+
+	span.SetStatus(codes.Error, "Unexpected error")
+	span.RecordError(errors.New("unexpected error"))
+
+	c.JSON(http.StatusInternalServerError, gin.H{"data": "nok"})
 }
