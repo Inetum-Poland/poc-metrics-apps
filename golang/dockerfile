@@ -10,20 +10,16 @@ FROM golang:1.23.2 AS build
 WORKDIR /app
 
 # Copy only the go.mod file to install dependencies efficiently and leverage layer caching
-COPY go.mod go.sum ./
+ADD go.mod go.sum main.go internal/ ./
 
 # Use cache mounts to speed up the installation of existing dependencies
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
-
-# Copy the entire application source code
-COPY *.go .
-
 # Compile the application during build and statically link the binary
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go build \
+# --mount=type=cache,target=/go/pkg/mod \
+# --mount=type=cache,target=/root/.cache/go-build \
+RUN \
+  go mod tidy && \
+  go mod download && \
+  go build \
     -ldflags="-linkmode external -extldflags -static" \
     -tags netgo \
     -o out

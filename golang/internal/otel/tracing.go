@@ -1,4 +1,4 @@
-package main
+package otel
 
 import (
 	"context"
@@ -13,16 +13,6 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 )
-
-var serviceName = "AppGolang"
-var collectorURL = "opentelemetry"
-
-var otlpHeaders = map[string]string{
-	"X-Otel-Trace-Exporter":          "otlp",
-	"X-Otel-Trace-Exporter-Endpoint": fmt.Sprintf("%s:%d", collectorURL, 4317),
-}
-
-var tracer trace.Tracer
 
 func newHttpTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 	return otlptracehttp.New(ctx,
@@ -60,7 +50,7 @@ func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	)
 }
 
-func setupTracer(ctx context.Context) *sdktrace.TracerProvider {
+func SetupTracer(ctx context.Context) (*sdktrace.TracerProvider, trace.Tracer) {
 	// exp, err := newGrpcTraceExporter(ctx)
 	exp, err := newHttpTraceExporter(ctx)
 	if err != nil {
@@ -69,7 +59,7 @@ func setupTracer(ctx context.Context) *sdktrace.TracerProvider {
 
 	traceProvider := newTraceProvider(exp)
 	otel.SetTracerProvider(traceProvider)
-	tracer = traceProvider.Tracer("pl.inetum.com/go-otel-tracing")
+	tracer := traceProvider.Tracer("pl.inetum.com/go-otel-tracing")
 
-	return traceProvider
+	return traceProvider, tracer
 }

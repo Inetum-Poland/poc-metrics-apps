@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+
+	api "inetum.com/metrics-go-app/internal/api"
+	otel "inetum.com/metrics-go-app/internal/otel"
 )
 
 func main() {
-	ctx := context.Background()
-	traceProvider := setupTracer(ctx)
-	defer func() { _ = traceProvider.Shutdown(ctx) }()
+	// Singleton exit.
+	defer func() { _ = otel.TraceProvider.Shutdown(context.Background()) }()
 
-	r := router()
+	// Start the API.
+	r := api.Router()
 	_ = r.Run(":8080")
 }
