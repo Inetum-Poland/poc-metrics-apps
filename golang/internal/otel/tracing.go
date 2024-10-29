@@ -11,13 +11,12 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"go.opentelemetry.io/otel/trace"
+	trace "go.opentelemetry.io/otel/trace"
 )
 
 func newHttpTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 	return otlptracehttp.New(ctx,
 		otlptracehttp.WithEndpoint(fmt.Sprintf("%s:%d", collectorURL, 4318)),
-		otlptracehttp.WithHeaders(otlpHeaders),
 		otlptracehttp.WithInsecure(),
 	)
 }
@@ -25,7 +24,6 @@ func newHttpTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 func newGrpcTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 	return otlptracegrpc.New(ctx,
 		otlptracegrpc.WithEndpoint(fmt.Sprintf("%s:%d", collectorURL, 4317)),
-		otlptracegrpc.WithHeaders(otlpHeaders),
 		otlptracegrpc.WithInsecure(),
 	)
 }

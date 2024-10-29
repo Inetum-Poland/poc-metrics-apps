@@ -3,6 +3,7 @@ package function
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -18,6 +19,7 @@ func LongRun(c *gin.Context) {
 	ctx, span := otel.Tracer.Start(c.Request.Context(), "LongRun")
 	defer span.End()
 	span.AddEvent("LongRun started")
+	slog.Info("LongRun started")
 
 	_ = add(ctx, 1, 2)
 	_ = substract(ctx, 1, 2)
@@ -26,6 +28,7 @@ func LongRun(c *gin.Context) {
 
 	span.SetStatus(codes.Ok, "ok")
 	span.AddEvent("LongRun done")
+	slog.Info("LongRun done")
 	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
