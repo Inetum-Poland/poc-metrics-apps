@@ -60,7 +60,7 @@ func SetupLogger(ctx context.Context) (*sdklog.LoggerProvider, *slog.Logger) {
 	// logger := logProvider.Logger("pl.inetum.com/go-otel-log")
 	logger := otelslog.NewLogger(
 		serviceName,
-		otelslog.WithLoggerProvider(LoggerProvider),
+		otelslog.WithLoggerProvider(logProvider),
 	)
 
 	return logProvider, logger

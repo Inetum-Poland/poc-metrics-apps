@@ -8,14 +8,14 @@ services:
     ports:
       - 8080:8080
 
-  app-dotnet:
-    build:
-      context: dotnet
-    container_name: app-dotnet
-    environment:
-      - OTLP_HOSTNAME=opentelemetry
-    ports:
-      - 8081:8080
+  # app-dotnet:
+  #   build:
+  #     context: dotnet
+  #   container_name: app-dotnet
+  #   environment:
+  #     - OTLP_HOSTNAME=opentelemetry
+  #   ports:
+  #     - 8081:8080
 
 # ---
 
@@ -68,6 +68,17 @@ services:
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./docker-compose/tempo/tempo.yaml:/etc/tempo.yaml
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - 3100 # loki http
+      - 9095 # loki grpc
+    command: [ "-config.file=/etc/loki.yaml" ]
+    volumes:
+      - ./docker-compose/loki/loki.yaml:/etc/loki.yaml
 
 # ---
 
