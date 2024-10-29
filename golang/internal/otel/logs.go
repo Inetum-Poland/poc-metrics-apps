@@ -51,7 +51,8 @@ func newLogProvider(exp sdklog.Exporter) *sdklog.LoggerProvider {
 }
 
 func SetupLogger(ctx context.Context) (*sdklog.LoggerProvider, *slog.Logger) {
-	exp, err := newHttpLogExporter(ctx)
+	exp, err := newGrpcLogExporter(ctx)
+	// exp, err := newHttpLogExporter(ctx)
 	if err != nil {
 		__log.Fatalf("failed to initialize exporter: %v", err)
 	}

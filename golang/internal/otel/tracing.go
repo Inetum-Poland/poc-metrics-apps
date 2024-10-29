@@ -49,8 +49,8 @@ func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 }
 
 func SetupTracer(ctx context.Context) (*sdktrace.TracerProvider, trace.Tracer) {
-	// exp, err := newGrpcTraceExporter(ctx)
-	exp, err := newHttpTraceExporter(ctx)
+	exp, err := newGrpcTraceExporter(ctx)
+	// exp, err := newHttpTraceExporter(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize exporter: %v", err)
 	}

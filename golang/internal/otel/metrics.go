@@ -55,7 +55,8 @@ func newMeterProvider(exp sdkmetric.Exporter) *sdkmetric.MeterProvider {
 }
 
 func SetupMeter(ctx context.Context) (*sdkmetric.MeterProvider, metric.Meter) {
-	exp, err := newHttpMerticExporter(ctx)
+	exp, err := newGrpcMetricExporter(ctx)
+	// exp, err := newHttpMerticExporter(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize exporter: %v", err)
 	}

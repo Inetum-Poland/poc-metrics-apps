@@ -12,12 +12,12 @@ processors:
 connectors:
 
 exporters:
-  otlp/1:
-    endpoint: tempo:4317
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
     tls:
       insecure: true
-  otlp/2:
-    endpoint: loki:9095
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
     tls:
       insecure: true
 
@@ -26,8 +26,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/1]
+      exporters: [otlphttp/tempo]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/2]
+      exporters: [otlphttp/loki]

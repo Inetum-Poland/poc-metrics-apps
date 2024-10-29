@@ -19,7 +19,7 @@ func LongRun(c *gin.Context) {
 	ctx, span := otel.Tracer.Start(c.Request.Context(), "LongRun")
 	defer span.End()
 	span.AddEvent("LongRun started")
-	slog.Info("LongRun started")
+	slog.InfoContext(ctx, "LongRun started", slog.String("test", "test"))
 
 	_ = add(ctx, 1, 2)
 	_ = substract(ctx, 1, 2)
@@ -28,7 +28,7 @@ func LongRun(c *gin.Context) {
 
 	span.SetStatus(codes.Ok, "ok")
 	span.AddEvent("LongRun done")
-	slog.Info("LongRun done")
+	slog.InfoContext(ctx, "LongRun done", slog.String("test", "test2"))
 	c.JSON(http.StatusOK, gin.H{"data": "ok"})
 }
 
