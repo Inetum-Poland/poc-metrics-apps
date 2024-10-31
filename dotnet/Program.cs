@@ -1,86 +1,36 @@
-using BookStoreApi.Models;
-using BookStoreApi.Services;
-using Examples.AspNetCore;
-using OpenTelemetry.Exporter;
-using OpenTelemetry.Instrumentation.AspNetCore;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using System.Reflection.PortableExecutable;
+using System.Text.Json;
+using Configuration;
+using DotnetAppBlueprint;
+using Microsoft.AspNetCore.Http.Json;
 
-var appBuilder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.CaptureStartupErrors(true);
 
-const string serviceName = "bookstore-api";
+builder.Services.AddSingleton<Instrumentation>();
 
-var otlpHostName = Environment.GetEnvironmentVariable("OTLP_HOSTNAME") ?? "localhost";
+builder.Logging.ClearProviders();
 
-appBuilder.Services.AddSingleton<Instrumentation>();
+builder.Services.AddTelemetry(builder.Configuration);
 
-appBuilder.Logging.ClearProviders();
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+});
 
-appBuilder.Services.AddOpenTelemetry()
-    .ConfigureResource(r => r
-        .AddService(
-            serviceName: serviceName,
-            serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString() ?? "unknown",
-            serviceInstanceId: Environment.MachineName))
-    .WithTracing(builder =>
-    {
-        builder
-            .AddSource(Instrumentation.ActivitySourceName)
-            .SetSampler(new AlwaysOnSampler())
-            .AddHttpClientInstrumentation()
-            .AddAspNetCoreInstrumentation();
+builder.Services.AddOptions<DatabaseConfiguration>().Bind(builder.Configuration.GetSection("MongoDatabase"));
 
-        appBuilder.Services.Configure<AspNetCoreTraceInstrumentationOptions>(appBuilder.Configuration.GetSection("AspNetCoreInstrumentation"));
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-        builder.AddOtlpExporter(otlpOptions =>
-        {
-            otlpOptions.Endpoint = new Uri($"http://{otlpHostName}:4317");
-        }).AddConsoleExporter();
-    })
-    .WithMetrics(builder =>
-    {
-        builder
-            .AddMeter(Instrumentation.MeterName)
-            .SetExemplarFilter(ExemplarFilterType.TraceBased)
-            .AddRuntimeInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddAspNetCoreInstrumentation();
-
-        builder.AddOtlpExporter(otlpOptions =>
-        {
-            otlpOptions.Endpoint = new Uri($"http://{otlpHostName}:4317");
-        }).AddConsoleExporter()
-        .AddPrometheusExporter();
-    }).WithLogging(builder =>
-    {
-        builder.AddOtlpExporter(otlpOptions =>
-        {
-            otlpOptions.Endpoint = new Uri($"http://{otlpHostName}:4317");
-        }).AddConsoleExporter();
-    });
-
-appBuilder.Services.Configure<BookStoreDatabaseSettings>(
-  appBuilder.Configuration.GetSection("BookStoreDatabase"));
-
-appBuilder.Services.AddSingleton<BooksService>();
-
-appBuilder.Services.AddControllers()
-  .AddJsonOptions(
-    options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
-
-appBuilder.Services.AddEndpointsApiExplorer();
-appBuilder.Services.AddSwaggerGen();
-
-var app = appBuilder.Build();
+var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
-app.UseAuthorization();
-app.MapControllers();
-app.Run();
+app.MapRoutes();
+
+await app.RunAsync();
+
+public partial class Program { }
