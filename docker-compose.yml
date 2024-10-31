@@ -11,14 +11,14 @@ services:
       - mongodb
       - grafana
 
-  # app-dotnet:
-  #   build:
-  #     context: dotnet
-  #   container_name: app-dotnet
-  #   environment:
-  #     - OTLP_HOSTNAME=opentelemetry
-  #   ports:
-  #     - 8081:8080
+  app-dotnet:
+    build:
+      context: dotnet
+    container_name: app-dotnet
+    environment:
+      - OTLP_HOSTNAME=opentelemetry
+    ports:
+      - 8081:8080
 
 # ---
 
