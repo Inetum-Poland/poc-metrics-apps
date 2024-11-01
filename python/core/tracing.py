@@ -1,6 +1,8 @@
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter
+)
 from opentelemetry.sdk.trace import TracerProvider, ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.resources import Resource
@@ -22,27 +24,35 @@ class CustomBatchSpanProcessor(BatchSpanProcessor):
             span: Span that should be sent
         """
         if span.kind == SpanKind.INTERNAL and (
-            span.attributes.get("asgi.event.type") in ("http.request", "http.response.start", "http.response.body")
+            span.attributes.get("asgi.event.type") in (
+                "http.request",
+                "http.response.start",
+                "http.response.body"
+            )
         ):
             return
         super().on_end(span=span)
 
 
-def setup_telemetry(service_name: str="fastapi-service") -> TracerProvider:
+def setup_tracing(service_name: str = "fastapi-service") -> None:
     """
-    Setup telemetry for an app.
+    Setup OTEL Tracing.
     Parameters:
-        service_name: name of the service to include within spans
-    Returns:
-        TracerProvider: tracer that can be used to create spans
+      service_name: name of the service
     """
-    resource = Resource.create({"service.name": service_name})
+    resource = Resource.create({
+        "service.name": service_name,
+        "deployment.environment": "local"
+    }, schema_url="https://opentelemetry.io/schemas/1.21.0")
+
     tracer_provider = TracerProvider(resource=resource)
-    otlp_exporter = OTLPSpanExporter(endpoint=settings.OTLP_ENDPOINT)
+    otlp_exporter = OTLPSpanExporter(
+        endpoint=settings.OTLP_ENDPOINT,
+        insecure=True
+    )
     span_processor = CustomBatchSpanProcessor(otlp_exporter)
     tracer_provider.add_span_processor(span_processor)
     trace.set_tracer_provider(tracer_provider)
-    return tracer_provider
 
 
 def get_tracer(name: str) -> TracerProvider:

@@ -22,7 +22,7 @@ async def get_database() -> MongoDB:
 async def connect_to_mongo() -> None:
     """
     Establish connection to MongoDB.
-    Done by assigning values to instance of MongoDB class. 
+    Done by assigning values to instance of MongoDB class.
     """
     db.client = AsyncIOMotorClient(settings.MONGO_URL)
     db.db = db.client[settings.MONGO_DB_NAME]

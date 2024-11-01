@@ -1,13 +1,18 @@
-import asyncio 
+import asyncio
 from random import randint
 from typing import Callable
-from core.telemetry import get_tracer
+from core.tracing import get_tracer
 
 
 tracer = get_tracer(__name__)
 
 
-async def perform_operation(operation: str, a: int, b: int, function: Callable[[int, int], int]) -> int:
+async def perform_operation(
+        operation: str,
+        a: int,
+        b: int,
+        function: Callable[[int, int], int]
+        ) -> int:
     """
     Run function with provided parametrs with added delay.
     Delay is a value between 20ms to 800ms.
@@ -21,16 +26,16 @@ async def perform_operation(operation: str, a: int, b: int, function: Callable[[
       int: Result of provided function
     """
     with tracer.start_as_current_span(operation) as span:
-      span.add_event(f"{operation} started")
-      
-      delay = randint(20, 800) / 1000
-      await asyncio.sleep(delay)
-      result = function(a, b)
+        span.add_event(f"{operation} started")
 
-      span.set_status(200, "ok")
-      span.add_event(f"{operation} done")
+        delay = randint(20, 800) / 1000
+        await asyncio.sleep(delay)
+        result = function(a, b)
 
-      return result
+        span.set_status(200, "ok")
+        span.add_event(f"{operation} done")
+
+        return result
 
 
 async def add(a: int, b: int) -> int:

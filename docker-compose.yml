@@ -104,7 +104,7 @@ services:
     restart: unless-stopped
     ports:
       - 4317 # otlp grpc
-      - 4318:4318 # otlp http
+      - 4318 # otlp http
     command: --config=/etc/opentelemetry/config.yaml
     depends_on:
       - grafana

@@ -4,7 +4,8 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from api.endpoints import router
 from core.config import settings
-from core.telemetry import setup_telemetry
+from core.tracing import setup_tracing
+from core.logging import setup_logging
 from db.mongodb import connect_to_mongo, close_mongo_connection
 
 
@@ -20,7 +21,8 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-tracer_provider = setup_telemetry(settings.PROJECT_NAME)
+setup_logging(settings.PROJECT_NAME)
+setup_tracing(settings.PROJECT_NAME)
 FastAPIInstrumentor.instrument_app(app)
 
 app.include_router(router)
