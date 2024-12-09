@@ -1,0 +1,95 @@
+---
+# https://github.com/antonbabenko/pre-commit-terraform
+# brew install pre-commit terraform-docs tflint tfsec trivy checkov terrascan infracost tfupdate minamijoyo/hcledit/hcledit jq
+
+# https://github.com/pre-commit/pre-commit-hooks
+# https://github.com/python-jsonschema/check-jsonschema/
+
+# https://github.com/trufflesecurity/trufflehog
+
+fail_fast: true
+
+repos:
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v3.6.0
+  hooks:
+    - id: conventional-pre-commit
+      name: Check Conventional Commit
+      stages: [commit-msg]
+      args: [--strict, --force-scope]
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+    - id: check-yaml
+      name: Check YAML
+      stages: [pre-commit]
+
+    - id: mixed-line-ending
+      name: Check Mixed Line Endings
+      stages: [pre-commit]
+      args: [--fix=lf]
+
+    - id: end-of-file-fixer
+      name: Check End of Files
+      stages: [pre-commit]
+
+    - id: trailing-whitespace
+      name: Check Trailing Whitespace
+      stages: [pre-commit]
+      args: [--markdown-linebreak-ext=md]
+
+    - id: check-merge-conflict
+      name: Check for Merge Conflicts
+      stages: [pre-commit]
+
+    - id: detect-private-key
+      name: Check Private Keys
+      stages: [pre-commit]
+
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.29.4
+  hooks:
+    - id: check-github-workflows
+      name: Check GitHub Workflows
+      stages: [pre-commit]
+      args: ["--verbose"]
+
+- repo: https://github.com/dnephin/pre-commit-golang
+  rev: v0.5.1
+  hooks:
+    - id: go-fmt
+      name: GO Format
+
+    # - id: go-vet
+    - id: go-imports
+      name: GO Imports
+
+    - id: go-cyclo
+      name: GO Cyclomatic Complexity
+      args: [-over=15]
+
+    - id: validate-toml
+      name: GO Validate TOML
+
+    - id: no-go-testing
+      name: GO No Testing
+
+    # - id: golangci-lint
+
+    # - id: go-critic
+    #   name: GO Critic
+
+    # - id: go-unit-tests
+
+    # - id: go-build
+
+    - id: go-mod-tidy
+      name: GO Mod Tidy
+
+# - repo: https://github.com/jvstein/pre-commit-dotnet-format
+#   rev: 'v0.3'
+#   hooks:
+#   - id: dotnet-format
+#     name: .Net Format
+#     args: ['dotnet/dotnet-app-blueprint.sln']

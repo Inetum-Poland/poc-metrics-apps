@@ -1,34 +1,53 @@
-# https://stackoverflow.com/questions/67498836/docker-chown-changing-ownership-of-data-db-operation-not-permitted
-
 services:
+
+# --- Apps --------------------------------------------------------------------
   app-golang:
     build:
-      context: golang
+      context: ./golang
+      dockerfile: dockerfile
+      target: finall
     container_name: app-golang
     ports:
-      - 8080:8080
+      - 8080:8080 # API
     depends_on:
       - mongodb
       - grafana
+    environment:
+      - APP_OTEL_HOST=opentelemetry
+      - APP_OTEL_PORT=4317
+      - APP_MONGO_HOST=mongodb
+      - APP_MONGO_PORT=27017
+      - APP_MONGO_USER=root
+      - APP_MONGO_PASS=Password123
 
   app-dotnet:
     build:
-      context: dotnet
+      context: ./dotnet
+      dockerfile: Dockerfile
     container_name: app-dotnet
     environment:
       - OTLP_HOSTNAME=opentelemetry
     ports:
       - 8081:8080
+    depends_on:
+      - mongodb
+      - grafana
 
   app-python:
     build:
-      context: python
+      context: ./python
+      dockerfile: dockerfile
     container_name: app-python
     ports:
       - 8082:8080
+    depends_on:
+      - mongodb
+      - grafana
 
-# ---
-
+# --- MongoDB -----------------------------------------------------------------
+  # https://github.com/mongodb/mongo
+  # https://hub.docker.com/_/mongo
+  # https://stackoverflow.com/questions/67498836/docker-chown-changing-ownership-of-data-db-operation-not-permitted
   mongodb:
     image: mongo:8.0.3
     container_name: mongodb
@@ -37,17 +56,36 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=Password123
       - MONGO_INITDB_DATABASE=Data
     ports:
-      - 27017
+      - 27017:27017 # mongodb
     volumes:
       - mongodb-data:/data/db
       - ./docker-compose/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
+  # https://github.com/mongo-express/mongo-express
+  # https://hub.docker.com/_/mongo-express/tags
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - 27018:8081 # mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://root:Password123@mongodb:27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=Password123
+    depends_on:
+      - mongodb
+
+# --- Grafana -----------------------------------------------------------------
+  # https://github.com/grafana/grafana
+  # https://hub.docker.com/r/grafana/grafana/tags
   grafana:
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:11.3.1
     container_name: grafana
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - 3000:3000 # grafana http
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -57,59 +95,76 @@ services:
     volumes:
       - ./docker-compose/grafana/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
 
+# --- LGTM --------------------------------------------------------------------
+  # https://github.com/prometheus/prometheus
+  # https://hub.docker.com/r/prom/prometheus/tags
   prometheus:
-    image: prom/prometheus:v2.55.0
+    image: prom/prometheus:v3.0.1
     container_name: prometheus
     restart: unless-stopped
     ports:
-      - 9090:9090
-    command: [ "--config.file=/etc/prometheus/prometheus.yaml" ]
+      - 9090:9090 # prometheus http
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--enable-feature=exemplar-storage"
+      - "--enable-feature=extra-scrape-metrics"
+      - "--enable-feature=promql-per-step-stats"
+      - "--web.enable-otlp-receiver"
     depends_on:
       - grafana
     volumes:
       - ./docker-compose/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
 
+  # https://github.com/grafana/tempo
+  # https://hub.docker.com/r/grafana/tempo/tags
   tempo:
     image: grafana/tempo:2.6.1
     container_name: tempo
     ports:
-      - 3200 # tempo http
-      - 3201 # tempo grpc
-      - 4317 # otlp grpc
-      - 4318 # otlp http
+      - 3200:3200 # tempo http
+      - 3201:3201 # tempo grpc
+      # - 4317 # otlp grpc
+      # - 4318 # otlp http
     command: [ "-config.file=/etc/tempo.yaml" ]
     depends_on:
       - grafana
     volumes:
       - ./docker-compose/tempo/tempo.yaml:/etc/tempo.yaml
 
+  # https://github.com/grafana/loki
+  # https://hub.docker.com/r/grafana/loki/tags
   loki:
-    image: grafana/loki:3.1.2
+    image: grafana/loki:3.3.0
     container_name: loki
     restart: unless-stopped
     ports:
-      - 3100 # loki http
-      - 9095 # loki grpc
+      - 3100:3100 # loki http
+      - 9095:9095 # loki grpc
     command: [ "-config.file=/etc/loki.yaml" ]
     depends_on:
       - grafana
     volumes:
       - ./docker-compose/loki/loki.yaml:/etc/loki.yaml
 
-# ---
-
+# --- OpenTelemetry -----------------------------------------------------------
+  # https://github.com/open-telemetry/opentelemetry-collector
+  # https://hub.docker.com/r/otel/opentelemetry-collector/tags
   opentelemetry:
-    image: otel/opentelemetry-collector:0.112.0
+    image: otel/opentelemetry-collector:0.114.0
     container_name: opentelemetry
     restart: unless-stopped
     ports:
-      - 4317 # otlp grpc
-      - 4318 # otlp http
+      - 4137:4317 # otlp grpc
+      - 4318:4318 # otlp http
     command: --config=/etc/opentelemetry/config.yaml
     depends_on:
       - grafana
+      - loki
+      - tempo
+      - prometheus
     volumes:
       - ./docker-compose/opentelemetry/config.yaml:/etc/opentelemetry/config.yaml
 
+# --- Volumes -----------------------------------------------------------------
 volumes:
   mongodb-data:
