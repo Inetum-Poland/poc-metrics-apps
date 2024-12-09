@@ -6,25 +6,41 @@ The main goal of this PoC is to demonstrate how to use OpenTelemetry to collect 
 
 ### Languages
 
+- GoLang
 - .NET
-- Go
 - Python
 
 ## API Endpoints
 
 ### `GET /api/long_run`
 
+- [golang](http://localhost:8080/api/long_run)
+- [dotnet](http://localhost:8081/api/long_run)
+- [python](http://localhost:8082/api/long_run)
+
 This should call the `longRun()` function.
 
 ### `GET /api/short_run`
+
+- [golang](http://localhost:8080/api/short_run)
+- [dotnet](http://localhost:8081/api/short_run)
+- [python](http://localhost:8082/api/short_run)
 
 This should call the `shortRun()` function.
 
 ### `GET /api/database_run`
 
+- [golang](http://localhost:8080/api/database_run)
+- [dotnet](http://localhost:8081/api/database_run)
+- [python](http://localhost:8082/api/database_run)
+
 This should call the `databaseRun()` function.
 
 ### `GET /api/failed_run`
+
+- [golang](http://localhost:8080/api/failed_run)
+- [dotnet](http://localhost:8081/api/failed_run)
+- [python](http://localhost:8082/api/failed_run)
 
 This should call the `failedRun()` function.
 
@@ -34,10 +50,10 @@ This should call the `failedRun()` function.
 
 This function should call the following:
 
-- Add
-- Substract
-- Multiply
-- Divide
+- `add(int a, int b)`
+- `subtract(int a, int b)`
+- `multiply(int a, int b)`
+- `divide(int a, int b)`
 
 ### `shortRun()`
 
@@ -51,22 +67,14 @@ This function should connect to the database, find all documents, and return the
 
 This function should sleep for 100 milliseconds and then fail.
 
-## Helper Functions
-
-### `add(int a, int b)`
-
-### `subtract(int a, int b)`
-
-### `multiply(int a, int b)`
-
-### `divide(int a, int b)`
-
 ## Database Schema
 
-| Collection | Field | Type     | Description                        |
-| ---------- | ----- | -------- | ---------------------------------- |
-| Data       | _id   | ObjectId | Unique identifier for the document |
-| Data       | data  | int      | Data field                         |
+| Collection | Field        | Type     | Description                                   |
+| ---------- | ------------ | -------- | --------------------------------------------- |
+| Data       | `_id`        | ObjectId | (internal) Unique identifier for the document |
+| Data       | `created_at` | Time     | (internal) N/a                                |
+| Data       | `updated_at` | Time     | (internal)N/a                                 |
+| Data       | `data`       | int      | Data field                                    |
 
 ## Docker Compose and Makefile
 
@@ -75,6 +83,16 @@ To run the application, you can use the provided `docker-compose` file or `makef
 ```bash
 > make docker-compose
 ```
+
+### Docker Compose Links
+
+| Service       | Links                  |
+| ------------- | ---------------------- |
+| Grafana       | http://localhost:3000  |
+| Prometheus    | http://localhost:9090  |
+| Loki          | http://localhost:3100  |
+| Tempo         | http://localhost:3200  |
+| Mongo-Express | http://localhost:27018 |
 
 ## Prerequisites
 

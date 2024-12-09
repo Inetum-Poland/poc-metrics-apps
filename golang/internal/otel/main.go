@@ -10,27 +10,62 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	trace "go.opentelemetry.io/otel/trace"
+	"inetum.com/metrics-go-app/internal/config"
 )
 
-var Tracer trace.Tracer
-var TraceProvider *sdktrace.TracerProvider
+var (
+	Tracer        trace.Tracer
+	TraceProvider *sdktrace.TracerProvider
 
-var Meter metric.Meter
-var MeterProvider *sdkmetric.MeterProvider
+	Meter         metric.Meter
+	MeterProvider *sdkmetric.MeterProvider
 
-// var SLogger *slog.Logger
-var Logger *slog.Logger
-var LoggerProvider *sdklog.LoggerProvider
+	Logger         *slog.Logger
+	LoggerProvider *sdklog.LoggerProvider
 
-var serviceName = "AppGolang"
-var collectorURL = "opentelemetry"
+	serviceName  string
+	collectorURL string
 
-var otlpHttpConnection = fmt.Sprintf("%s:%d", collectorURL, 4318)
-var otlpGrpcConnection = fmt.Sprintf("%s:%d", collectorURL, 4317)
+	ApiCounter  metric.Int64Counter
+	DbCounter   metric.Int64Counter
+	FailCounter metric.Int64Counter
+	ApiReqCount metric.Int64Counter
+	ApiReqTime  metric.Float64Histogram
+)
 
-// Singleton; Runs only on the first import.
-func init() {
-	TraceProvider, Tracer = SetupTracer(context.Background())
-	MeterProvider, Meter = SetupMeter(context.Background())
-	LoggerProvider, Logger = SetupLogger(context.Background())
+func setupMetics() {
+	ApiCounter, _ = Meter.Int64Counter(
+		"api.counter",
+		metric.WithDescription("Number of API calls."),
+		metric.WithUnit("{call}"),
+	)
+
+	DbCounter, _ = Meter.Int64Counter(
+		"db.counter",
+		metric.WithDescription("Number of DB calls."),
+		metric.WithUnit("{call}"),
+	)
+
+	ApiReqCount, _ = Meter.Int64Counter(
+		"api.req.count",
+		metric.WithDescription("Number of requests."),
+	)
+
+	ApiReqTime, _ = Meter.Float64Histogram(
+		"api.req.time",
+		metric.WithDescription("Request time."),
+		metric.WithExplicitBucketBoundaries(0.001, 0.005, 0.010, 0.050, 0.100, 0.500, 1.000, 5.000, 10.000),
+	)
+}
+
+func Setup() {
+	collectorURL = fmt.Sprintf("%s:%d", config.C.Otel.Host, config.C.Otel.Port)
+	serviceName = config.C.WebApp.Name
+
+	ctx := context.Background()
+	TraceProvider, Tracer = SetupTracer(ctx)
+	MeterProvider, Meter = SetupMeter(ctx)
+	LoggerProvider, Logger = SetupLogger(ctx)
+
+	setupMetics()
 }

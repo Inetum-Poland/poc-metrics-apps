@@ -20,6 +20,10 @@ exporters:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
+  otlphttp/prom:
+    endpoint: http://prometheus:9090/api/v1/otlp/
+    tls:
+      insecure: true
 
 service:
   pipelines:
@@ -31,3 +35,33 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlphttp/loki]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/prom]
+
+  telemetry:
+    metrics:
+      level: normal
+      readers:
+        - periodic:
+            interval: 10000
+            exporter:
+              otlp:
+                protocol: grpc/protobuf
+                endpoint: http://localhost:4317
+
+    # traces:
+    #   processors:
+    #     - batch:
+    #         exporter:
+    #           otlp:
+    #             protocol: grpc/protobuf
+    #             endpoint: http://localhost:4317
+
+    # logs:
+    #   level: "DEBUG"
+    #   output_paths:
+    #     - http://localhost:4318
+    #   error_output_paths:
+    #     - http://localhost:4318

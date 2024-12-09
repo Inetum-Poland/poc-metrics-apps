@@ -2,28 +2,26 @@ package otel
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	trace "go.opentelemetry.io/otel/trace"
 )
 
-func newHttpTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
-	return otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(fmt.Sprintf("%s:%d", collectorURL, 4318)),
-		otlptracehttp.WithInsecure(),
-	)
-}
+// func newHttpTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
+// 	return otlptracehttp.New(ctx,
+// 		otlptracehttp.WithEndpoint(fmt.Sprintf("%s:%d", collectorURL, 4318)),
+// 		otlptracehttp.WithInsecure(),
+// 	)
+// }
 
 func newGrpcTraceExporter(ctx context.Context) (sdktrace.SpanExporter, error) {
 	return otlptracegrpc.New(ctx,
-		otlptracegrpc.WithEndpoint(fmt.Sprintf("%s:%d", collectorURL, 4317)),
+		otlptracegrpc.WithEndpoint(collectorURL),
 		otlptracegrpc.WithInsecure(),
 	)
 }
@@ -57,7 +55,8 @@ func SetupTracer(ctx context.Context) (*sdktrace.TracerProvider, trace.Tracer) {
 
 	traceProvider := newTraceProvider(exp)
 	otel.SetTracerProvider(traceProvider)
-	tracer := traceProvider.Tracer("pl.inetum.com/go-otel-tracing")
+	tracer := traceProvider.Tracer("pl.inetum.com/go-otel-tracing",
+		trace.WithInstrumentationVersion("0.0.1"))
 
 	return traceProvider, tracer
 }

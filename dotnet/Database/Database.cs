@@ -18,7 +18,7 @@ internal static class Database
             var client = new MongoClient(configuration.ConnectionString);
 
             var database = client.GetDatabase(configuration.DatabaseName);
-            
+
             await database.RunCommandAsync<BsonDocument>(new BsonDocument { { "ping", 1 } });
 
             var collection = database.GetCollection<BsonDocument>("Data");

@@ -1,10 +1,10 @@
 package db
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"inetum.com/metrics-go-app/internal/mongo_orm"
 )
 
 type Data struct {
-	ID   primitive.ObjectID `bson:"_id"`
-	Data int                `bson:"data"`
+	mongo_orm.Model
+	Data int `bson:"data"`
 }

@@ -12,7 +12,7 @@ namespace DotnetAppBlueprint;
 
 internal static class ApiFunctions
 {
-    public static async Task<IResult> LongRun([FromServices]Instrumentation instrumentation)
+    public static async Task<IResult> LongRun([FromServices] Instrumentation instrumentation)
     {
 
         using var activity = instrumentation.ActivitySource.StartActivity("LongRun")!;
@@ -28,7 +28,7 @@ internal static class ApiFunctions
         return Results.Ok(new { data = "ok" });
     }
 
-    public static async Task<IResult> ShortRun([FromServices]Instrumentation instrumentation)
+    public static async Task<IResult> ShortRun([FromServices] Instrumentation instrumentation)
     {
         using var activity = instrumentation.ActivitySource.StartActivity("ShortRun")!;
         activity.AddEvent(new("ShortRun started"));
@@ -40,7 +40,7 @@ internal static class ApiFunctions
         return Results.Ok(new { data = "ok" });
     }
 
-    public static async Task<List<DataDto>> DatabaseRun([FromServices]Instrumentation instrumentation, [FromServices]ILogger<Program> logger, [FromServices]IOptions<DatabaseConfiguration> configuration)
+    public static async Task<List<DataDto>> DatabaseRun([FromServices] Instrumentation instrumentation, [FromServices] ILogger<Program> logger, [FromServices] IOptions<DatabaseConfiguration> configuration)
     {
         using var activity = instrumentation.ActivitySource.StartActivity("DatabaseRun")!;
         activity.AddEvent(new("DatabaseRun started"));
@@ -77,7 +77,7 @@ internal static class ApiFunctions
         }
     }
 
-    public static async Task<IResult> FailedRun([FromServices]Instrumentation instrumentation, [FromServices]ILogger<Program> logger)
+    public static async Task<IResult> FailedRun([FromServices] Instrumentation instrumentation, [FromServices] ILogger<Program> logger)
     {
         using var activity = instrumentation.ActivitySource.StartActivity("FailedRun")!;
         activity.AddEvent(new("FailedRun started"));

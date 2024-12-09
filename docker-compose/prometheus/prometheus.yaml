@@ -14,6 +14,10 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
+storage:
+  tsdb:
+    out_of_order_time_window: 30m
+
   # - job_name: "app"
   #   static_configs:
   #     - targets: ["app:8080"]

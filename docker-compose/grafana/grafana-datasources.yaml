@@ -11,6 +11,10 @@ datasources:
     version: 1
     uid: prometheus
     tlsSkipVerifyInsecure: true
+    jsonData:
+      exemplarTraceIdDestinations:
+        - datasourceUid: tempo
+          name: trace_id
 
   - name: Tempo
     type: tempo
@@ -20,9 +24,38 @@ datasources:
     basicAuth: false
     isDefault: false
     version: 1
-    # apiVersion: 1
     uid: tempo
     tlsSkipVerifyInsecure: true
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'loki'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: false
+      # tracesToMetrics:
+      #   datasourceUid: 'prometheus'
+      #   spanStartTimeShift: '15m'
+      #   spanEndTimeShift: '-15m'
+      #   tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+      #   queries:
+      #     - name: 'Sample query'
+      #       query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+      serviceMap:
+        datasourceUid: 'prometheus'
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '15m'
+        spanEndTimeShift: '-15m'
+      spanBar:
+        type: 'Tag'
+        tag: 'http.path'
+      # streamingEnabled:
+      #   search: true
 
   - name: Loki
     type: loki
@@ -32,6 +65,15 @@ datasources:
     basicAuth: false
     isDefault: false
     version: 1
-    # apiVersion: 1
     uid: loki
     tlsSkipVerifyInsecure: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: tempo
+          name: trace_id
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'
+          # https://github.com/grafana/grafana/pull/76162/files#diff-d1450274604f92b0ba9266bcc32b3c75801e84373e669a5af42777ee2c24ed9eR57
+          matcherType: "label"
+          matcherRegex: "trace_id"
